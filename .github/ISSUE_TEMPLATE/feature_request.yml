@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest a capability the viewer should have on device.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What analyst workflow are you trying to support?
+      description: Concrete CTI use cases carry the most weight.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like the component to do?
+    validations:
+      required: true
+  - type: checkboxes
+    id: parity
+    attributes:
+      label: Scope
+      options:
+        - label: This exists in the `stix2vis` web package (parity gap)
+        - label: This is React Native specific (gestures, native export, …)
+        - label: This would need a new runtime dependency

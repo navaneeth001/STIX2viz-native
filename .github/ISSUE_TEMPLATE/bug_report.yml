@@ -1,0 +1,55 @@
+name: Bug report
+description: Something renders wrong, crashes, or behaves differently from the web package.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug! Please scrub any real
+        indicators before pasting a bundle.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: bundle
+    attributes:
+      label: Minimal STIX bundle that reproduces it
+      render: json
+    validations:
+      required: true
+  - type: input
+    id: package-version
+    attributes:
+      label: stix2vis-native version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - iOS
+        - Android
+        - Both
+        - Other (react-native-web…)
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: React Native / Expo version
+      placeholder: React Native 0.86.0, Expo SDK 54
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: The code that renders the component
+      render: tsx
+    validations:
+      required: false

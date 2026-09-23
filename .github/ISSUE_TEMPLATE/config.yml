@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/navaneeth001/STIX2viz-native/discussions
+    about: Ask how to render a bundle, theme the graph, or handle a STIX edge case.
+  - name: Security issue
+    url: https://github.com/navaneeth001/STIX2viz-native/security/advisories/new
+    about: Report a vulnerability privately instead of opening an issue.
+  - name: Web package (stix2vis)
+    url: https://github.com/navaneeth001/STIX2viz/issues
+    about: Issues with the React/DOM package belong in the STIX2viz repository.

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "stix2vis-native",
+  "version": "0.1.0",
+  "description": "React Native component that renders STIX 2.1 content as an interactive relationship graph, entirely on-device.",
+  "keywords": [
+    "react-native",
+    "stix",
+    "stix2",
+    "visualization",
+    "graph",
+    "cyber security",
+    "cti",
+    "threat intelligence",
+    "oasis",
+    "ios",
+    "android",
+    "expo"
+  ],
+  "author": {
+    "name": "Navaneeth Prakash",
+    "email": "navaneethpqln@gmail.com",
+    "url": "https://github.com/navaneeth001"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navaneeth001/STIX2viz-native.git"
+  },
+  "bugs": {
+    "url": "https://github.com/navaneeth001/STIX2viz-native/issues"
+  },
+  "homepage": "https://github.com/navaneeth001/STIX2viz-native#readme",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "default": "./dist/core/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "core": [
+        "./dist/core/index.d.ts"
+      ]
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "core.js",
+    "core.d.ts"
+  ],
+  "engines": {
+    "node": ">=20.19.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "react": ">=18.2.0",
+    "react-native": ">=0.71.0",
+    "react-native-svg": ">=13.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react-native-svg": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@babel/core": "^7.28.0",
+    "@eslint/js": "^10.0.1",
+    "@react-native/babel-preset": "^0.86.0",
+    "@react-native/jest-preset": "^0.86.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^24.9.1",
+    "@types/react": "^19.2.0",
+    "@types/react-test-renderer": "^19.3.0",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "jest": "^29.7.0",
+    "prettier": "^3.9.8",
+    "publint": "^0.3.24",
+    "react": "^19.2.3",
+    "react-native": "^0.86.0",
+    "react-native-svg": "^15.15.5",
+    "react-test-renderer": "^19.2.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.0"
+  },
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "icons": "node scripts/generate-icons.mjs",
+    "build": "npm run clean && tsc -p tsconfig.build.json && node scripts/postbuild.mjs",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "coverage": "jest --coverage",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"example/**/*.{ts,tsx}\" \"*.{json,js,ts}\" \"*.md\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"example/**/*.{ts,tsx}\" \"*.{json,js,ts}\" \"*.md\"",
+    "size": "node scripts/check-size.mjs",
+    "verify": "npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build && npm run size && publint && env -u npm_config_dry_run attw --pack .",
+    "prepublishOnly": "npm run verify",
+    "publish:build": "npm publish"
+  },
+  "size-budget": [
+    {
+      "name": "Core graph builder (no UI dependencies)",
+      "path": "dist/core/index.js",
+      "limit": "20 kB"
+    },
+    {
+      "name": "React Native component (react-native-svg external)",
+      "path": "dist/index.js",
+      "limit": "40 kB"
+    },
+    {
+      "name": "Bundled icons",
+      "path": "dist/icons",
+      "limit": "300 kB"
+    }
+  ]
+}
