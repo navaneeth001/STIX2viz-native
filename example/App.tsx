@@ -1,11 +1,14 @@
 import React, { useCallback, useState } from "react";
 import {
   Alert,
+  Modal,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -86,6 +89,9 @@ const BUNDLE = {
 
 export default function App() {
   const [selection, setSelection] = useState("Nothing selected");
+  const [bundle, setBundle] = useState<unknown>(BUNDLE);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState("");
 
   const handleSelectionChange = useCallback(
     (next: { nodes: string[]; edges: string[] }) => {
@@ -99,6 +105,20 @@ export default function App() {
     []
   );
 
+  /**
+   * `stixJson` accepts a bundle, a single STIX object, an array of objects or a
+   * JSON string, so pasted JSON goes straight in. Parsing it here reports
+   * malformed input with your own message; hand the string over instead and the
+   * package reports it through `onError`.
+   */
+  const loadPastedJson = useCallback((text: string) => {
+    try {
+      setBundle(JSON.parse(text));
+    } catch (error) {
+      Alert.alert("Not valid JSON", String(error));
+    }
+  }, []);
+
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar barStyle="dark-content" />
@@ -108,8 +128,23 @@ export default function App() {
           Drag to pan, pinch to zoom, tap a node or an edge.
         </Text>
 
+        <View style={styles.row}>
+          <Pressable
+            style={styles.button}
+            onPress={() => {
+              setPasteText("");
+              setPasteOpen(true);
+            }}
+          >
+            <Text style={styles.buttonText}>Load JSON…</Text>
+          </Pressable>
+          <Pressable style={styles.button} onPress={() => setBundle(BUNDLE)}>
+            <Text style={styles.buttonText}>Example bundle</Text>
+          </Pressable>
+        </View>
+
         <Stix2Vis
-          stixJson={BUNDLE}
+          stixJson={bundle}
           showToolbar
           showDetailsPanel
           showDanglingRefs
@@ -126,6 +161,43 @@ export default function App() {
 
         <Text style={styles.selection}>{selection}</Text>
       </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent
+        visible={pasteOpen}
+        onRequestClose={() => setPasteOpen(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Paste STIX JSON</Text>
+              <Pressable onPress={() => setPasteOpen(false)}>
+                <Text style={styles.modalAction}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  loadPastedJson(pasteText);
+                  setPasteOpen(false);
+                }}
+              >
+                <Text style={styles.modalAction}>Load</Text>
+              </Pressable>
+            </View>
+            <TextInput
+              style={styles.modalInput}
+              value={pasteText}
+              onChangeText={setPasteText}
+              placeholder='{"type":"bundle","objects":[...]}'
+              placeholderTextColor="#9ca3af"
+              multiline
+              autoCapitalize="none"
+              autoCorrect={false}
+              textAlignVertical="top"
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -157,5 +229,63 @@ const styles = StyleSheet.create({
   selection: {
     fontSize: 12,
     color: "#4b5563",
+  },
+  row: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  button: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#c7cbd1",
+    backgroundColor: "#ffffff",
+  },
+  buttonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(17, 24, 39, 0.45)",
+  },
+  modalCard: {
+    height: "70%",
+    gap: 8,
+    padding: 12,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
+    backgroundColor: "#ffffff",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  modalTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modalAction: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0b8043",
+  },
+  modalInput: {
+    flex: 1,
+    padding: 10,
+    fontSize: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#dcdfe4",
+    borderRadius: 8,
+    backgroundColor: "#fbfbfc",
   },
 });

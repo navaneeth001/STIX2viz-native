@@ -210,6 +210,78 @@ STIX 2.0 `observed-data` objects get one node per embedded observable. Node
 labels prefer `name`, then `value`, then `path`, then the STIX type, are
 truncated at 40 characters and de-duplicated with a `(n)` suffix.
 
+### Loading a bundle at runtime
+
+`stixJson` takes a JSON string as well as an object, so a bundle the user picks
+or pastes goes straight in. The package itself never touches the file system or
+the network: how the bytes arrive is your app's decision.
+
+With [`expo-document-picker`](https://docs.expo.dev/versions/latest/sdk/document-picker/)
+and [`expo-file-system`](https://docs.expo.dev/versions/latest/sdk/filesystem/):
+
+```tsx
+import * as DocumentPicker from "expo-document-picker";
+import { File } from "expo-file-system";
+
+const pick = await DocumentPicker.getDocumentAsync({
+  type: ["application/json", "text/plain"],
+  // Keep the picker's own `content://` URI: expo-file-system honours the read
+  // grant that comes with it. The copied `file://` cache path is rejected by
+  // Expo Go's sandbox check ("Missing 'READ' permission for accessing the
+  // file"), so do not let the picker copy the file.
+  copyToCacheDirectory: false,
+});
+
+if (!pick.canceled && pick.assets[0]) {
+  const text = await new File(pick.assets[0].uri).text();
+
+  setBundle(JSON.parse(text)); // parse here to report malformed JSON yourself
+}
+
+<Stix2Vis stixJson={bundle} showToolbar />;
+```
+
+Wrap the read in a timeout so a stalled picker result surfaces as an error
+instead of a spinner that never stops — and try more than one reader. In testing
+on Android, `fetch` refused the picker's `content://` URI while expo-file-system
+read it without trouble:
+
+```ts
+const read = (uri: string) =>
+  Promise.race([
+    new File(uri).text(),
+    new Promise<string>((_resolve, reject) =>
+      setTimeout(() => reject(new Error("no answer in 5s")), 5000)
+    ),
+  ]);
+```
+
+Pasting needs no extra dependency — a `TextInput` and `JSON.parse` are enough:
+
+```tsx
+<TextInput
+  value={text}
+  onChangeText={setText}
+  multiline
+  autoCapitalize="none"
+  autoCorrect={false}
+/>
+
+<Button
+  title="Load"
+  onPress={() => {
+    try {
+      setBundle(JSON.parse(text));
+    } catch (error) {
+      Alert.alert("Not valid JSON", String(error));
+    }
+  }}
+/>
+```
+
+Hand the raw string to `stixJson` instead if you would rather not parse twice;
+the package then reports malformed content through `onError`.
+
 ## Filtering and labelling with `config`
 
 ```tsx
