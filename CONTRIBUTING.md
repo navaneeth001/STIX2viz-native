@@ -54,6 +54,50 @@ budget, the packaging gate, and package/type-resolution checks (`publint`,
   deliberately and say so in your PR.
 - **No telemetry, no network calls.** STIX content must never leave the device.
 
+## Releasing
+
+Publishing is done from CI, not from a laptop: `.github/workflows/publish.yml`
+runs the full verification gate and then `npm publish --provenance --access public`
+whenever a GitHub Release is published, so the tarball on the registry is the one
+the gate proved and it carries a signed provenance statement.
+
+1. Bump `version` in `package.json` and add the matching entry to `CHANGELOG.md`
+   (`Added` / `Changed` / `Fixed` / `Notes`).
+2. `npm run verify`, then commit and push to `main` — CI re-runs the same gate.
+3. Tag the release and push the tag:
+   ```bash
+   git tag -a v0.1.0 -m "stix2vis-native 0.1.0"
+   git push origin v0.1.0
+   ```
+4. Draft a GitHub Release from that tag (the changelog entry makes a good body)
+   and publish it. The workflow does the rest.
+
+### The first release of a new package
+
+A trusted publisher can only be configured once the package exists on npmjs.com,
+so the very first publish needs a credential. Create a **granular access token**
+with read + write access (write tokens have a 90-day maximum lifetime — classic
+tokens no longer work at all, they were revoked) and store it as the `NPM_TOKEN`
+repository secret, then publish the Release as above.
+
+### After the first release: drop the token
+
+Once `stix2vis-native@0.1.0` exists you can publish with OIDC and no secret:
+
+- Add a trusted publisher for `navaneeth001/STIX2viz-native` with the workflow
+  name `publish.yml` (package → Settings → Trusted Publisher on npmjs.com, or
+  `npm trust list stix2vis-native` to inspect what is configured).
+- Delete the `NODE_AUTH_TOKEN` environment block from `publish.yml` and delete the
+  `NPM_TOKEN` secret. The variable has to be **absent, not empty** — npm treats an
+  empty `NODE_AUTH_TOKEN` as a real token and will not fall back to OIDC.
+- Keep `id-token: write` (already set) and publish from cloud-hosted runners
+  only, using a Node that ships npm ≥ 11.5.1 (the workflow pins Node 24; Node 22
+  ships an npm that is too old for OIDC). `--provenance` becomes redundant —
+  npm attaches provenance automatically.
+
+`npm login && npm publish` still works locally in a pinch, but a local `npm
+publish` does not attach provenance, which is half the value of the CI flow.
+
 ## Reporting bugs
 
 Open a [bug report](https://github.com/navaneeth001/STIX2viz-native/issues/new?template=bug_report.yml)

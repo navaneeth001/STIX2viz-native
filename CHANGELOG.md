@@ -42,10 +42,20 @@ package and rebuilt around native rendering.
   STIX helpers (`makeGraphData`, `legendTypes`, matchers, errors) with no React
   Native or SVG dependency at all, so bundles can be turned into graph data in
   plain Node (scripts, servers, tests).
+- **Loading your own bundle at runtime** — the README documents the
+  `expo-document-picker` recipe for handing a file (or pasted text) to
+  `stixJson`, including the `copyToCacheDirectory: false` trap on Android, and
+  the example app can load a picked file or a pasted bundle.
 - **Packaging** — CommonJS build with type declarations, validated by `publint`
   and `@arethetypeswrong/cli`, a size budget for the JS and the icons, and
   subpath shims so `stix2vis-native/core` resolves with or without package
   `exports` support.
+
+### Fixed
+
+- **The graph no longer collapses to zero height** — the SVG surface is wrapped
+  in a `flex: 1` container, so it measures correctly inside a scroll view, a
+  `SafeAreaView` or any parent that does not hand it an explicit height.
 
 ### Notes
 
