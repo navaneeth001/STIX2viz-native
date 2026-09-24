@@ -31,8 +31,8 @@ Run the full verification gate — CI runs exactly this:
 npm run verify
 ```
 
-It executes lint, format check, type check, the test suite, the build, the
-size budget, and package/type-resolution checks (`publint`,
+It executes lint, format check, type check, the test suite, the build, the size
+budget, the packaging gate, and package/type-resolution checks (`publint`,
 `@arethetypeswrong/cli`).
 
 ## Project rules that keep this package trustworthy

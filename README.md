@@ -412,7 +412,9 @@ npm run format       # Prettier
 npm run icons        # regenerate src/icons/registry.ts from src/icons/*.png
 npm run build        # tsc → dist/ + icons copied + subpath shims written
 npm run size         # JS and icon size budgets
-npm run verify       # all of the above + publint + attw; also runs on prepublishOnly
+npm run package:check # entry points exist, nothing unpublishable in dist/
+npm run attw         # type-resolution check (@arethetypeswrong/cli)
+npm run verify       # everything above, in CI order, plus publint and attw
 ```
 
 `dist/`, `core.js` and `core.d.ts` are generated, not committed: `npm run
@@ -435,8 +437,9 @@ npm publish          # prepublishOnly verifies, prepack guarantees dist/ exists
 ```
 
 Nothing is uploaded unless `npm run verify` passes: lint, format check,
-typecheck, the test suite, the build, the size budget, `publint` and
-`@arethetypeswrong/cli`. To inspect the exact tarball without uploading:
+typecheck, the test suite, the build, the size budget, the packaging gate,
+`publint` and `@arethetypeswrong/cli`. To inspect the exact tarball without
+uploading:
 
 ```bash
 npm publish --dry-run
@@ -458,10 +461,10 @@ npm deprecate "stix2vis-native@<0.1.0" "Broken packaging; upgrade to 0.1.1"
 Issues and pull requests are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md)
 for the project rules and the `npm run verify` gate. Please run it before
 opening a PR: it runs linting, formatting, type checking, the test suite, the
-build, the size budget and package/type-resolution checks (`publint`,
-`@arethetypeswrong/cli`). Prop compatibility with the web package is locked by
-tests, so if a change to `makeGraphData` output is intentional, update the
-expectations in `src/core/graphData.test.ts` deliberately.
+build, the size budget, the packaging gate and package/type-resolution checks
+(`publint`, `@arethetypeswrong/cli`). Prop compatibility with the web package is
+locked by tests, so if a change to `makeGraphData` output is intentional, update
+the expectations in `src/core/graphData.test.ts` deliberately.
 
 ## Community
 

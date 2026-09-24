@@ -1,0 +1,7 @@
+# Keep published files LF regardless of the contributor's platform: CRLF in a
+# package that ships build scripts and JSON is a needless source of noise.
+* text=auto eol=lf
+
+# Binary assets must never be touched.
+*.png binary
+*.svg text
