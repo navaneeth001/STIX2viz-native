@@ -50,6 +50,16 @@ function byType(renderer: ReactTestRenderer, type: string) {
   );
 }
 
+/** Merges a style array the way React Native resolves it. */
+function flattenStyle(style: unknown): Record<string, unknown> {
+  return Array.isArray(style)
+    ? style.reduce<Record<string, unknown>>(
+        (merged, entry) => Object.assign(merged, entry),
+        {}
+      )
+    : ((style as Record<string, unknown> | undefined) ?? {});
+}
+
 /** Simulates the native layout pass that gives the canvas its size. */
 function layout(renderer: ReactTestRenderer, width = 400, height = 400) {
   const canvas = findByTestId(renderer, "stix2vis-canvas")[0]!;
@@ -107,6 +117,15 @@ describe("GraphCanvas", () => {
     const { renderer } = renderCanvas();
 
     expect(byType(renderer, "RNSVG.Svg")).toHaveLength(0);
+  });
+
+  it("fills the box its parent gives it, so it is never 0 high", () => {
+    const { renderer } = renderCanvas();
+    const canvas = findByTestId(renderer, "stix2vis-canvas")[0]!;
+
+    // Regression: a bare view in a fixed-height parent measures 0 high on
+    // device, which pinned the viewport at 0 and rendered no SVG at all.
+    expect(flattenStyle(canvas.props.style).flex).toBe(1);
   });
 
   it("draws one circle, icon and label per node once measured", () => {

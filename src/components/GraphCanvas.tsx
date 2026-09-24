@@ -510,6 +510,12 @@ function placeholderLetter(stixType: string): string {
 
 const styles = StyleSheet.create({
   container: {
+    // The canvas has no intrinsic size of its own: fill the box the parent
+    // gives it — `Stix2Vis` sizes its wrapper (420pt by default) and callers
+    // can pass `graphStyle={{ flex: 1 }}`. Without this the view measures 0
+    // high, the `onLayout` size stays 0 and the SVG — which is only rendered
+    // once the viewport is known — never appears.
+    flex: 1,
     overflow: "hidden",
   },
 });
