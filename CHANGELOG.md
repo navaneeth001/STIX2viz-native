@@ -3,6 +3,11 @@
 All notable changes to this project are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## 1.0.1
+
+- Compacted the README while preserving installation, API and migration details.
+- Refreshed release metadata and documentation for the 1.0.1 package release.
+
 ## 0.1.0
 
 The first release: STIX 2.1 visualisation for React Native, extracted from the

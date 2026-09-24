@@ -66,8 +66,8 @@ the gate proved and it carries a signed provenance statement.
 2. `npm run verify`, then commit and push to `main` — CI re-runs the same gate.
 3. Tag the release and push the tag:
    ```bash
-   git tag -a v0.1.1 -m "stix2vis-native 0.1.1"
-   git push origin v0.1.1
+   git tag -a v1.0.1 -m "stix2vis-native 1.0.1"
+   git push origin v1.0.1
    ```
 4. Draft a GitHub Release from that tag (the changelog entry makes a good body)
    and publish it. The workflow does the rest.

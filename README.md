@@ -21,53 +21,12 @@ export default function Screen() {
 }
 ```
 
-## Why stix2vis-native?
+## Highlights
 
-- **Native, not a WebView.** Nodes and edges are drawn with `react-native-svg`,
-  so the graph is a real view hierarchy: no HTML, no bridge to a hidden
-  browser, no bundled `vis-network` payload on device.
-- **Parity with the web package.** `stixJson`, `config`, `showDanglingRefs`,
-  `showDetailsPanel`, `showToolbar` and every callback behave the way
-  `stix2vis` documents them, so the same screen code works on web and native.
-- **Touch-first.** Tap a node or edge to select it, tap the background to
-  clear, drag to pan, pinch to zoom — and the toolbar adds search, per-type
-  legend toggles and zoom/fit for good measure.
-- **Deterministic layout.** The force-directed layout runs once, on the JS
-  thread, with no `Math.random()` and no per-frame physics: the same bundle
-  always produces the same picture, and a phone stays responsive.
-- **Dependency-light.** `react`, `react-native` and `react-native-svg` are the
-  only peers — the graph builder, the layout, the gesture handling and the
-  rendering are all first-party code, and the published package has **zero**
-  runtime dependencies.
-- **Private by design.** No telemetry, no network calls; STIX content never
-  leaves the device.
-- **TypeScript-first.** Ships type declarations; input can be a bundle, object
-  array, single object or raw JSON string.
-
-Inspired by the
-[OASIS CTI STIX Visualisation](https://oasis-open.github.io/cti-stix-visualization/)
-project, like its web counterpart.
-
-## Contents
-
-- [Install](#install)
-- [Quick start](#quick-start)
-- [Props](#props)
-- [Interactions](#interactions)
-- [Supported input](#supported-input)
-- [Filtering and labelling with `config`](#filtering-and-labelling-with-config)
-- [Dangling references](#dangling-references)
-- [Toolbar and detail panel](#toolbar-and-detail-panel)
-- [Theming](#theming)
-- [Icons](#icons)
-- [Exporting](#exporting)
-- [Using the graph builder without UI](#using-the-graph-builder-without-ui)
-- [Differences from the web package](#differences-from-the-web-package)
-- [Performance](#performance)
-- [Development](#development)
-- [Contributing](#contributing)
-- [Community](#community)
-- [Roadmap](#roadmap)
+- Native `react-native-svg` rendering with touch selection, pan and pinch-to-zoom
+- Web-package API parity, TypeScript declarations and zero runtime dependencies
+- Deterministic layout, STIX 2.0/2.1 support and no network calls or telemetry
+- Optional toolbar, details panel, theming, custom icons and JSON export
 
 ## Install
 
@@ -212,75 +171,27 @@ truncated at 40 characters and de-duplicated with a `(n)` suffix.
 
 ### Loading a bundle at runtime
 
-`stixJson` takes a JSON string as well as an object, so a bundle the user picks
-or pastes goes straight in. The package itself never touches the file system or
-the network: how the bytes arrive is your app's decision.
-
-With [`expo-document-picker`](https://docs.expo.dev/versions/latest/sdk/document-picker/)
-and [`expo-file-system`](https://docs.expo.dev/versions/latest/sdk/filesystem/):
+`stixJson` also accepts a JSON string, so the package can render a file or
+pasted value without any file-system or network code of its own. For Expo,
+install `expo-document-picker` and `expo-file-system`, keep the picker's URI
+(`copyToCacheDirectory: false`), and pass its text to `stixJson`:
 
 ```tsx
-import * as DocumentPicker from "expo-document-picker";
-import { File } from "expo-file-system";
-
 const pick = await DocumentPicker.getDocumentAsync({
   type: ["application/json", "text/plain"],
-  // Keep the picker's own `content://` URI: expo-file-system honours the read
-  // grant that comes with it. The copied `file://` cache path is rejected by
-  // Expo Go's sandbox check ("Missing 'READ' permission for accessing the
-  // file"), so do not let the picker copy the file.
   copyToCacheDirectory: false,
 });
 
 if (!pick.canceled && pick.assets[0]) {
   const text = await new File(pick.assets[0].uri).text();
-
-  setBundle(JSON.parse(text)); // parse here to report malformed JSON yourself
+  setBundle(JSON.parse(text));
 }
-
-<Stix2Vis stixJson={bundle} showToolbar />;
 ```
 
-Wrap the read in a timeout so a stalled picker result surfaces as an error
-instead of a spinner that never stops — and try more than one reader. In testing
-on Android, `fetch` refused the picker's `content://` URI while expo-file-system
-read it without trouble:
-
-```ts
-const read = (uri: string) =>
-  Promise.race([
-    new File(uri).text(),
-    new Promise<string>((_resolve, reject) =>
-      setTimeout(() => reject(new Error("no answer in 5s")), 5000)
-    ),
-  ]);
-```
-
-Pasting needs no extra dependency — a `TextInput` and `JSON.parse` are enough:
-
-```tsx
-<TextInput
-  value={text}
-  onChangeText={setText}
-  multiline
-  autoCapitalize="none"
-  autoCorrect={false}
-/>
-
-<Button
-  title="Load"
-  onPress={() => {
-    try {
-      setBundle(JSON.parse(text));
-    } catch (error) {
-      Alert.alert("Not valid JSON", String(error));
-    }
-  }}
-/>
-```
-
-Hand the raw string to `stixJson` instead if you would rather not parse twice;
-the package then reports malformed content through `onError`.
+For pasted text, call `JSON.parse` yourself to report malformed input, or pass
+the raw string to `stixJson` and handle `onError`. On Android, add a timeout
+around file reads because a stalled provider can otherwise leave a picker
+spinner running indefinitely.
 
 ## Filtering and labelling with `config`
 
@@ -436,20 +347,14 @@ which is handy when you want the data without the default presentation.
 
 ## Differences from the web package
 
-|                          | `stix2vis` (web)                        | `stix2vis-native`                            |
-| ------------------------ | --------------------------------------- | -------------------------------------------- |
-| Renderer                 | `vis-network` on `<canvas>`             | `react-native-svg` primitives                |
-| Import                   | `import Stix2Vis from "stix2vis"`       | `import { Stix2Vis } from "stix2vis-native"` |
-| Props, config, callbacks | —                                       | identical (parity is locked by tests)        |
-| Graph sizing             | 600×600 default                         | fills `graphStyle`, 420pt default            |
-| Interaction              | mouse + wheel                           | tap, drag, pinch, toolbar buttons            |
-| PNG export               | built in (canvas snapshot)              | bring `react-native-view-shot`               |
-| Dependencies             | `vis-network`, `vis-data`, `prop-types` | none (three peers)                           |
+- Use the named import: `import { Stix2Vis } from "stix2vis-native"`.
+- Graphs default to 420pt high in native views; pass `graphStyle={{ flex: 1 }}`
+  to fill a parent.
+- Interactions are touch-first: tap, drag, pinch and toolbar controls.
+- PNG export is app-provided via `react-native-view-shot`.
+- The package has three peer dependencies and no runtime dependencies.
 
-Because there is no default export: a CommonJS module that sets both
-`__esModule` and `default` breaks default imports in bundlers that read the
-entry as ESM, and `publint` flags it. `import { Stix2Vis }` is the documented
-form.
+Props, configuration and callbacks match `stix2vis` and are locked by tests.
 
 ## Performance
 
@@ -470,108 +375,27 @@ Tune it with the `layout` prop (`iterations`, `cutoff`, `repulsion`), or compute
 positions ahead of time with `computeLayout` and hand them to `GraphCanvas`
 directly.
 
-## Development
+## Development and contributing
 
 ```bash
-git clone https://github.com/navaneeth001/STIX2viz-native.git
-cd STIX2viz-native
 npm install
-npm test             # Jest + react-test-renderer behaviour-locking suite
-npm run coverage     # coverage report (thresholds are enforced)
-npm run typecheck    # tsc --noEmit
-npm run lint         # ESLint (flat config)
-npm run format       # Prettier
-npm run icons        # regenerate src/icons/registry.ts from src/icons/*.png
-npm run build        # tsc → dist/ + icons copied + subpath shims written
-npm run size         # JS and icon size budgets
-npm run package:check # entry points exist, nothing unpublishable in dist/
-npm run attw         # type-resolution check (@arethetypeswrong/cli)
-npm run verify       # everything above, in CI order, plus publint and attw
+npm test
+npm run verify
 ```
 
-`dist/`, `core.js` and `core.d.ts` are generated, not committed: `npm run
-build` produces them, `prepack`/`prepublishOnly` guarantee they exist before
-publishing, and CI builds them on every push. The source of truth for the
-published API is `src/index.tsx`, and `src/index.test.ts` locks the exported
-names down.
+`npm run verify` runs lint, formatting, TypeScript, tests, build, size and package
+checks, `publint`, and `@arethetypeswrong/cli`. See [CONTRIBUTING.md](./CONTRIBUTING.md)
+for project conventions and the release workflow. Please run verification before
+opening a pull request.
 
-There is no simulator in the loop: `react-native-svg` is mocked to host
-elements and the SVG primitives are asserted directly, gestures included (see
-`src/components/GraphCanvas.test.tsx`).
+## Links
 
-### Releasing (maintainers)
-
-```bash
-npm login            # publishing requires an authenticated account with 2FA
-git add -A
-git commit -m "chore(release): v0.1.1"
-npm publish          # prepublishOnly verifies, prepack guarantees dist/ exists
-```
-
-Nothing is uploaded unless `npm run verify` passes: lint, format check,
-typecheck, the test suite, the build, the size budget, the packaging gate,
-`publint` and `@arethetypeswrong/cli`. To inspect the exact tarball without
-uploading:
-
-```bash
-npm publish --dry-run
-```
-
-To publish from CI instead, create a GitHub Release — the **Publish to npm**
-workflow runs the same verification and publishes with provenance. It needs an
-`NPM_TOKEN` repository secret with publish rights, plus `id-token: write`
-(already configured in `.github/workflows/publish.yml`).
-
-If a bad version ever reaches the registry, deprecate it rather than unpublishing:
-
-```bash
-npm deprecate "stix2vis-native@<0.1.0" "Broken packaging; upgrade to 0.1.1"
-```
-
-## Contributing
-
-Issues and pull requests are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md)
-for the project rules and the `npm run verify` gate. Please run it before
-opening a PR: it runs linting, formatting, type checking, the test suite, the
-build, the size budget, the packaging gate and package/type-resolution checks
-(`publint`, `@arethetypeswrong/cli`). Prop compatibility with the web package is
-locked by tests, so if a change to `makeGraphData` output is intentional, update
-the expectations in `src/core/graphData.test.ts` deliberately.
-
-## Community
-
-- 🐛 [Report a bug](https://github.com/navaneeth001/STIX2viz-native/issues/new?template=bug_report.yml)
-- 💡 [Suggest a feature](https://github.com/navaneeth001/STIX2viz-native/issues/new?template=feature_request.yml)
-- 💬 [Ask a question](https://github.com/navaneeth001/STIX2viz-native/discussions)
-- 🔒 [Report a security issue](https://github.com/navaneeth001/STIX2viz-native/security/advisories/new)
-- 🌐 [The web package](https://github.com/navaneeth001/STIX2viz) — same engine, DOM renderer
-
-## Roadmap
-
-- Optional WebGL/Skia renderer for bundles above a few thousand objects.
-- Hit-testing through a spatial index instead of a per-frame element list.
-- Accessibility: an alternative table view and keyboard/switch navigation.
-- Timeline filtering and 1-hop neighbourhood focus.
-- TLP/marking-aware colouring and MITRE ATT&CK technique badges.
-- Native share/export helpers (`react-native-view-shot` integration) behind an
-  opt-in prop.
+- [Report a bug](https://github.com/navaneeth001/STIX2viz-native/issues/new?template=bug_report.yml)
+- [Request a feature](https://github.com/navaneeth001/STIX2viz-native/issues/new?template=feature_request.yml)
+- [Security advisories](https://github.com/navaneeth001/STIX2viz-native/security/advisories/new)
+- [Web sibling (`stix2vis`)](https://github.com/navaneeth001/STIX2viz)
+- [OASIS CTI STIX Visualization](https://oasis-open.github.io/cti-stix-visualization/)
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
-
-## Acknowledgements
-
-Built on the graph engine of the
-[`stix2vis`](https://github.com/navaneeth001/STIX2viz) web package, which is
-itself inspired by the STIX Visualisation project from the OASIS CTI Open
-Repository. Thanks to all contributors of that project, and to the
-[react-native-svg](https://github.com/software-mansion/react-native-svg)
-maintainers for a renderer that makes this possible.
-
-## Support
-
-Questions or problems? Please
-[open an issue](https://github.com/navaneeth001/STIX2viz-native/issues).
-
-**Author:** Navaneeth001 — navaneethpqln@gmail.com
+MIT — see [LICENSE](./LICENSE). Author: [Navaneeth001](https://github.com/navaneeth001).
